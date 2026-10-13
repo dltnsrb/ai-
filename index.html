@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>포켓몬 실루엣 퀴즈</title>
+  <style>
+    :root {
+      --red: #e94343;
+      --red-dark: #c92e37;
+      --ink: #20232b;
+      --muted: #747986;
+      --line: #e9eaf0;
+      --paper: #ffffff;
+      --bg: #f5f6fa;
+      --green: #20a56b;
+      --green-bg: #eaf8f1;
+      --wrong: #d94343;
+      --wrong-bg: #fff0f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 4%, rgba(233, 67, 67, .09), transparent 25rem),
+        radial-gradient(circle at 95% 95%, rgba(66, 122, 230, .08), transparent 24rem),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    }
+
+    button { font: inherit; }
+    button:focus-visible { outline: 3px solid rgba(233, 67, 67, .38); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+
+    .page-shell {
+      width: min(100% - 32px, 760px);
+      margin: 0 auto;
+      padding: 25px 0 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 23px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .pokeball {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      overflow: hidden;
+      background: linear-gradient(to bottom, var(--red) 0 46%, var(--ink) 46% 55%, #fff 55% 100%);
+      box-shadow: 0 3px 0 rgba(32, 35, 43, .08);
+    }
+    .pokeball::after {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      top: 10px;
+      left: 10px;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      background: #fff;
+    }
+    .brand-title { font-weight: 900; font-size: 15px; letter-spacing: .04em; white-space: nowrap; }
+    .brand-title span { color: var(--red); }
+    .top-tag {
+      color: #686d79;
+      background: rgba(255, 255, 255, .8);
+      border: 1px solid #e6e7ee;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .game-card {
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid rgba(222, 224, 233, .9);
+      border-radius: 27px;
+      box-shadow: 0 18px 55px rgba(35, 39, 55, .08);
+    }
+
+    .card-heading {
+      padding: 32px 34px 22px;
+      text-align: center;
+    }
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--red);
+      font-size: 11px;
+      line-height: 1.3;
+      letter-spacing: .18em;
+      font-weight: 900;
+    }
+    h1 { margin: 0; font-size: clamp(27px, 5vw, 36px); line-height: 1.2; letter-spacing: -.055em; }
+    .subtitle { margin: 11px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    .status-area { padding: 0 34px 21px; }
+    .stats { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 13px; }
+    .stat-label { display: block; margin-bottom: 3px; color: #9296a1; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+    .stat-value { font-size: 18px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .progress-track { height: 7px; overflow: hidden; border-radius: 999px; background: #f0f1f5; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--red), #ff8b65); transition: width .35s ease; }
+
+    .quiz-panel { padding: 0 34px 31px; }
+    .question-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 12px; }
+    .question-number { color: #8b8f9a; font-size: 11px; font-weight: 900; letter-spacing: .13em; }
+    .hint { color: #969aa4; font-size: 12px; text-align: right; }
+
+    .image-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 265px;
+      overflow: hidden;
+      border: 1px solid #f0f0f4;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,.98) 0 10%, rgba(255,255,255,.1) 58%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.0) 0 29px, rgba(255,255,255,.65) 30px 31px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.0) 0 29px, rgba(255,255,255,.65) 30px 31px),
+        #f7f8fb;
+    }
+    .image-stage::before {
+      content: "";
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      border: 1px solid rgba(221, 224, 234, .7);
+      border-radius: 50%;
+    }
+    .image-stage::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 1px;
+      bottom: 49px;
+      background: linear-gradient(90deg, transparent, #e7e9f0, transparent);
+    }
+    .pokemon-image {
+      position: relative;
+      z-index: 1;
+      width: min(58%, 230px);
+      height: 220px;
+      object-fit: contain;
+      filter: brightness(0) contrast(1.2);
+      transform: translateY(-2px);
+      transition: filter .35s ease, transform .35s ease;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .pokemon-image.revealed { filter: none; transform: translateY(-2px) scale(1.04); }
+    .stage-caption {
+      position: absolute;
+      z-index: 2;
+      bottom: 15px;
+      color: #a0a4ae;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .2em;
+    }
+    .image-fallback {
+      z-index: 2;
+      max-width: 80%;
+      color: #737887;
+      font-size: 13px;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .question-text { margin: 23px 0 15px; text-align: center; font-size: 18px; font-weight: 900; letter-spacing: -.025em; }
+    .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .choice {
+      min-height: 54px;
+      padding: 12px 14px;
+      border: 1px solid #e6e8ef;
+      border-radius: 13px;
+      color: #333743;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color .16s ease, background .16s ease, transform .16s ease, box-shadow .16s ease;
+    }
+    .choice:hover:not(:disabled) { border-color: #f08c8c; background: #fffafa; transform: translateY(-1px); box-shadow: 0 5px 13px rgba(233, 67, 67, .07); }
+    .choice:disabled { cursor: default; }
+    .choice.correct { border-color: #7ad1aa; background: var(--green-bg); color: #16784e; }
+    .choice.wrong { border-color: #ef9a9a; background: var(--wrong-bg); color: var(--wrong); }
+
+    .feedback {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+    .feedback.good { color: #16784e; background: var(--green-bg); }
+    .feedback.bad { color: #b83037; background: var(--wrong-bg); }
+    .actions { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .primary-button {
+      min-height: 47px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 12px;
+      color: white;
+      background: var(--red);
+      box-shadow: 0 7px 16px rgba(233, 67, 67, .2);
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .18s ease, transform .18s ease;
+    }
+    .primary-button:hover { background: var(--red-dark); transform: translateY(-1px); }
+    .quiet-button {
+      min-height: 43px;
+      padding: 0 15px;
+      border: 1px solid #e6e8ef;
+      border-radius: 11px;
+      color: #777c88;
+      background: white;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .quiet-button:hover { background: #f8f9fc; }
+
+    .result-panel { padding: 15px 34px 36px; text-align: center; }
+    .result-icon { display: grid; place-items: center; width: 76px; height: 76px; margin: 4px auto 18px; border-radius: 24px; background: #fff0f0; font-size: 35px; }
+    .result-title { margin: 0; font-size: 27px; font-weight: 950; letter-spacing: -.05em; }
+    .result-description { margin: 10px 0 22px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .final-score { display: inline-flex; align-items: baseline; gap: 6px; padding: 15px 26px; border: 1px solid #f0dada; border-radius: 16px; background: #fffafa; }
+    .final-score strong { color: var(--red); font-size: 36px; font-weight: 950; letter-spacing: -.06em; }
+    .final-score span { color: #797e89; font-size: 13px; font-weight: 800; }
+    .missed-list { margin: 23px 0 0; padding: 15px 17px; border-radius: 14px; background: #f7f8fb; text-align: left; }
+    .missed-list h3 { margin: 0 0 8px; font-size: 12px; }
+    .missed-list p { margin: 0; color: #737887; font-size: 13px; line-height: 1.8; }
+
+    .footer-note { padding-top: 17px; color: #a1a5af; font-size: 11px; line-height: 1.6; text-align: center; }
+    .footer-note a { color: inherit; }
+
+    @media (max-width: 520px) {
+      .page-shell { width: min(100% - 20px, 760px); padding-top: 15px; }
+      .topbar { margin-bottom: 14px; }
+      .brand-title { font-size: 12px; }
+      .pokeball { width: 32px; height: 32px; }
+      .pokeball::after { top: 8px; left: 8px; }
+      .top-tag { padding: 7px 9px; font-size: 10px; }
+      .game-card { border-radius: 21px; }
+      .card-heading { padding: 25px 20px 18px; }
+      .status-area { padding: 0 20px 18px; }
+      .quiz-panel { padding: 0 20px 24px; }
+      .result-panel { padding: 12px 20px 27px; }
+      .image-stage { min-height: 235px; }
+      .pokemon-image { height: 195px; width: 62%; }
+      .hint { max-width: 55%; }
+      .choice { min-height: 51px; padding: 10px 8px; font-size: 13px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="포켓몬 실루엣 퀴즈">
+        <span class="pokeball" aria-hidden="true"></span>
+        <div class="brand-title"><span>POKÉMON</span> SILHOUETTE QUIZ</div>
+      </div>
+      <div class="top-tag">나의 포켓몬 지식 테스트</div>
+    </header>
+
+    <main class="game-card">
+      <section class="card-heading">
+        <div class="eyebrow">WHO'S THAT POKÉMON?</div>
+        <h1>실루엣 퀴즈</h1>
+        <p class="subtitle">검은 그림자만 보고 어떤 포켓몬인지 맞혀 보세요!</p>
+      </section>
+
+      <section class="status-area" aria-label="게임 진행 상황">
+        <div class="stats">
+          <div>
+            <span class="stat-label">QUESTION</span>
+            <strong class="stat-value" id="questionCount">1 / 10</strong>
+          </div>
+          <div style="text-align: right;">
+            <span class="stat-label">MY SCORE</span>
+            <strong class="stat-value" id="score">0점</strong>
+          </div>
+        </div>
+        <div class="progress-track" role="progressbar" aria-label="퀴즈 진행률" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="progressTrack">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+      </section>
+
+      <section class="quiz-panel" id="quizPanel">
+        <div class="question-meta">
+          <span class="question-number" id="questionLabel">QUESTION 01 / 10</span>
+          <span class="hint">귀와 꼬리, 몸의 윤곽을 살펴보세요</span>
+        </div>
+
+        <div class="image-stage">
+          <img id="pokemonImage" class="pokemon-image" alt="검은색 포켓몬 실루엣" draggable="false" />
+          <div id="imageFallback" class="image-fallback" hidden>이미지를 불러오지 못했어요.<br />인터넷 연결을 확인해 주세요.</div>
+          <div class="stage-caption" id="stageCaption">GUESS THE POKÉMON</div>
+        </div>
+
+        <h2 class="question-text">이 포켓몬의 이름은 무엇일까요?</h2>
+        <div class="choices" id="choices" aria-label="정답 선택지"></div>
+        <div class="feedback" id="feedback" aria-live="polite" hidden></div>
+
+        <div class="actions">
+          <button type="button" class="primary-button" id="nextButton" hidden>다음 문제 →</button>
+          <button type="button" class="quiet-button" id="restartButton">처음부터 다시</button>
+        </div>
+      </section>
+
+      <section class="result-panel" id="resultPanel" hidden>
+        <div class="result-icon" id="resultIcon" aria-hidden="true">🏆</div>
+        <h2 class="result-title" id="resultTitle">퀴즈 완료!</h2>
+        <p class="result-description" id="resultDescription">모든 문제를 풀었어요.</p>
+        <div class="final-score"><strong id="finalScore">0</strong><span>/ 10 정답</span></div>
+        <div class="missed-list" id="missedList" hidden>
+          <h3>다시 살펴볼 포켓몬</h3>
+          <p id="missedNames"></p>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary-button" id="playAgainButton">다시 도전하기 ↻</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer-note">
+      포켓몬 이미지 출처: <a href="https://github.com/PokeAPI/sprites" target="_blank" rel="noreferrer">PokeAPI Sprites</a> · 이미지 로딩을 위해 인터넷 연결이 필요해요.
+    </footer>
+  </div>
+
+  <script>
+    // 포켓몬 도감 번호와 한국어 이름입니다. 문제는 이 목록에서 무작위로 출제됩니다.
+    const pokemonList = [
+      { id: 1, name: "이상해씨" },
+      { id: 4, name: "파이리" },
+      { id: 7, name: "꼬부기" },
+      { id: 25, name: "피카츄" },
+      { id: 39, name: "푸린" },
+      { id: 52, name: "나옹" },
+      { id: 54, name: "고라파덕" },
+      { id: 58, name: "가디" },
+      { id: 63, name: "케이시" },
+      { id: 66, name: "알통몬" },
+      { id: 74, name: "꼬마돌" },
+      { id: 92, name: "고오스" },
+      { id: 94, name: "팬텀" },
+      { id: 104, name: "탕구리" },
+      { id: 113, name: "럭키" },
+      { id: 133, name: "이브이" },
+      { id: 134, name: "샤미드" },
+      { id: 135, name: "쥬피썬더" },
+      { id: 136, name: "부스터" },
+      { id: 143, name: "잠만보" },
+      { id: 147, name: "미뇽" },
+      { id: 149, name: "망나뇽" },
+      { id: 150, name: "뮤츠" },
+      { id: 151, name: "뮤" },
+      { id: 172, name: "피츄" },
+      { id: 175, name: "토게피" },
+      { id: 196, name: "에브이" },
+      { id: 197, name: "블래키" },
+      { id: 249, name: "루기아" },
+      { id: 248, name: "마기라스" },
+      { id: 280, name: "랄토스" },
+      { id: 302, name: "깜까미" },
+      { id: 359, name: "앱솔" },
+      { id: 384, name: "레쿠쟈" },
+      { id: 393, name: "팽도리" },
+      { id: 445, name: "한카리아스" },
+      { id: 448, name: "루카리오" },
+      { id: 479, name: "로토무" },
+      { id: 487, name: "기라티나" },
+      { id: 658, name: "개굴닌자" },
+      { id: 700, name: "님피아" },
+      { id: 722, name: "나몰빼미" },
+      { id: 778, name: "따라큐" },
+      { id: 813, name: "염버니" },
+      { id: 818, name: "에이스번" },
+      { id: 888, name: "자시안" },
+      { id: 906, name: "나오하" },
+      { id: 909, name: "뜨아거" },
+      { id: 912, name: "꾸왁스" }
+    ];
+
+    const QUESTION_COUNT = 10;
+    const IMAGE_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/";
+
+    let questions = [];
+    let questionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let answerHistory = [];
+
+    const questionCountEl = document.getElementById("questionCount");
+    const scoreEl = document.getElementById("score");
+    const questionLabelEl = document.getElementById("questionLabel");
+    const progressBarEl = document.getElementById("progressBar");
+    const progressTrackEl = document.getElementById("progressTrack");
+    const pokemonImageEl = document.getElementById("pokemonImage");
+    const imageFallbackEl = document.getElementById("imageFallback");
+    const stageCaptionEl = document.getElementById("stageCaption");
+    const choicesEl = document.getElementById("choices");
+    const feedbackEl = document.getElementById("feedback");
+    const nextButtonEl = document.getElementById("nextButton");
+    const quizPanelEl = document.getElementById("quizPanel");
+    const resultPanelEl = document.getElementById("resultPanel");
+
+    function shuffle(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function startGame() {
+      questions = shuffle(pokemonList).slice(0, QUESTION_COUNT);
+      questionIndex = 0;
+      score = 0;
+      hasAnswered = false;
+      answerHistory = [];
+      quizPanelEl.hidden = false;
+      resultPanelEl.hidden = true;
+      scoreEl.textContent = "0점";
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      hasAnswered = false;
+      const correctPokemon = questions[questionIndex];
+      const options = shuffle([
+        correctPokemon,
+        ...shuffle(pokemonList.filter(pokemon => pokemon.id !== correctPokemon.id)).slice(0, 3)
+      ]);
+
+      questionCountEl.textContent = `${questionIndex + 1} / ${QUESTION_COUNT}`;
+      questionLabelEl.textContent = `QUESTION ${String(questionIndex + 1).padStart(2, "0")} / ${QUESTION_COUNT}`;
+      progressBarEl.style.width = `${(questionIndex / QUESTION_COUNT) * 100}%`;
+      progressTrackEl.setAttribute("aria-valuenow", String(questionIndex));
+
+      pokemonImageEl.classList.remove("revealed");
+      pokemonImageEl.alt = "검은색 포켓몬 실루엣";
+      pokemonImageEl.style.display = "block";
+      imageFallbackEl.hidden = true;
+      stageCaptionEl.textContent = "GUESS THE POKÉMON";
+      pokemonImageEl.onerror = function () {
+        pokemonImageEl.style.display = "none";
+        imageFallbackEl.hidden = false;
+      };
+      pokemonImageEl.onload = function () {
+        pokemonImageEl.style.display = "block";
+        imageFallbackEl.hidden = true;
+      };
+      pokemonImageEl.src = `${IMAGE_BASE}${correctPokemon.id}.png`;
+
+      choicesEl.innerHTML = "";
+      options.forEach(pokemon => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.textContent = pokemon.name;
+        button.dataset.name = pokemon.name;
+        button.addEventListener("click", () => chooseAnswer(pokemon));
+        choicesEl.appendChild(button);
+      });
+
+      feedbackEl.hidden = true;
+      feedbackEl.className = "feedback";
+      feedbackEl.textContent = "";
+      nextButtonEl.hidden = true;
+      nextButtonEl.textContent = questionIndex === QUESTION_COUNT - 1 ? "결과 확인하기 →" : "다음 문제 →";
+    }
+
+    function chooseAnswer(selectedPokemon) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+
+      const correctPokemon = questions[questionIndex];
+      const isCorrect = selectedPokemon.id === correctPokemon.id;
+      if (isCorrect) score += 1;
+      answerHistory.push({ selected: selectedPokemon, correct: correctPokemon, isCorrect });
+
+      scoreEl.textContent = `${score}점`;
+      progressBarEl.style.width = `${((questionIndex + 1) / QUESTION_COUNT) * 100}%`;
+      progressTrackEl.setAttribute("aria-valuenow", String(questionIndex + 1));
+
+      [...choicesEl.querySelectorAll("button")].forEach(button => {
+        button.disabled = true;
+        if (button.dataset.name === correctPokemon.name) button.classList.add("correct");
+        if (button.dataset.name === selectedPokemon.name && !isCorrect) button.classList.add("wrong");
+      });
+
+      pokemonImageEl.classList.add("revealed");
+      pokemonImageEl.alt = correctPokemon.name;
+      stageCaptionEl.textContent = correctPokemon.name.toUpperCase();
+
+      feedbackEl.hidden = false;
+      feedbackEl.className = `feedback ${isCorrect ? "good" : "bad"}`;
+      feedbackEl.textContent = isCorrect
+        ? `정답이에요! 🎉 ${correctPokemon.name}을(를) 맞혔어요.`
+        : `아쉬워요! 정답은 ${correctPokemon.name}이에요.`;
+      nextButtonEl.hidden = false;
+    }
+
+    function showResults() {
+      quizPanelEl.hidden = true;
+      resultPanelEl.hidden = false;
+      document.getElementById("finalScore").textContent = String(score);
+      const resultIcon = document.getElementById("resultIcon");
+      const resultTitle = document.getElementById("resultTitle");
+      const resultDescription = document.getElementById("resultDescription");
+      const missedList = document.getElementById("missedList");
+      const missedNames = document.getElementById("missedNames");
+
+      if (score === 10) {
+        resultIcon.textContent = "🏆";
+        resultTitle.textContent = "완벽해요! 포켓몬 박사!";
+        resultDescription.textContent = "10문제를 모두 맞혔어요. 실루엣만 보고도 척척 알아맞히네요!";
+      } else if (score >= 7) {
+        resultIcon.textContent = "✨";
+        resultTitle.textContent = "대단해요!";
+        resultDescription.textContent = "포켓몬을 잘 알고 있네요. 한 번 더 도전해서 만점을 노려 보세요!";
+      } else if (score >= 4) {
+        resultIcon.textContent = "👏";
+        resultTitle.textContent = "좋은 출발이에요!";
+        resultDescription.textContent = "조금만 더 연습하면 더 많이 맞힐 수 있어요. 다시 도전해 볼까요?";
+      } else {
+        resultIcon.textContent = "💪";
+        resultTitle.textContent = "다시 도전해 봐요!";
+        resultDescription.textContent = "정답을 확인하고 다시 도전해 보세요. 다음에는 더 잘할 수 있을 거예요!";
+      }
+
+      const missed = answerHistory.filter(answer => !answer.isCorrect).map(answer => answer.correct.name);
+      if (missed.length > 0) {
+        missedList.hidden = false;
+        missedNames.textContent = missed.join(" · ");
+      } else {
+        missedList.hidden = true;
+      }
+      progressBarEl.style.width = "100%";
+      progressTrackEl.setAttribute("aria-valuenow", String(QUESTION_COUNT));
+    }
+
+    nextButtonEl.addEventListener("click", () => {
+      if (!hasAnswered) return;
+      questionIndex += 1;
+      if (questionIndex >= QUESTION_COUNT) showResults();
+      else renderQuestion();
+    });
+
+    document.getElementById("restartButton").addEventListener("click", startGame);
+    document.getElementById("playAgainButton").addEventListener("click", startGame);
+
+    startGame();
+  </script>
+</body>
+</html>
